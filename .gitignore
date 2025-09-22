@@ -17,6 +17,10 @@ kc.o
 # kernel - removido do gitignore para permitir deploy
 # link.ld - removido do gitignore, é necessário para build
 
+# Permitir assets do v86 no Pages
+!docs/v86/**/*.bin
+!docs/v86/**/*.wasm
+
 # GitHub Pages
 public/
 _site/
