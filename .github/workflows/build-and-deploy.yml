@@ -3,19 +3,16 @@ name: Build and Deploy Kernel to GitHub Pages
 on:
   push:
     branches: [ main ]
-  pull_request:
-    branches: [ main ]
   workflow_dispatch:
 
+# Allow only one concurrent deployment
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
 jobs:
-  build-and-deploy:
+  build:
     runs-on: ubuntu-latest
-    
-    permissions:
-      contents: read
-      pages: write
-      id-token: write
-    
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
@@ -28,32 +25,49 @@ jobs:
     - name: Build kernel
       run: |
         echo "Building ASVARIUS Kernel..."
-        make clean
+        make clean || true
         make
-        ls -la kernel*
+        ls -la kernel* || echo "No kernel files found"
+        
+    - name: Setup Pages
+      uses: actions/configure-pages@v4
         
     - name: Prepare GitHub Pages
       run: |
         echo "Preparing files for GitHub Pages..."
-        mkdir -p public
-        cp docs/index.html public/
-        cp kernel public/ 2>/dev/null || echo "Warning: kernel file not found, web version will show error"
+        mkdir -p _site
+        cp docs/index.html _site/
         
-        # Create a simple landing page if kernel exists
+        # Copy kernel if it exists
         if [ -f kernel ]; then
-          echo "✓ Kernel compiled successfully and ready for web emulator" > public/build-status.txt
-          echo "Size: $(stat -c%s kernel) bytes" >> public/build-status.txt
-          echo "Built: $(date)" >> public/build-status.txt
+          cp kernel _site/
+          echo "✓ Kernel compiled successfully and ready for web emulator" > _site/build-status.txt
+          echo "Size: $(stat -c%s kernel) bytes" >> _site/build-status.txt
+          echo "Built: $(date)" >> _site/build-status.txt
         else
-          echo "❌ Kernel compilation failed" > public/build-status.txt
-          echo "Check build logs for details" >> public/build-status.txt
+          echo "❌ Kernel compilation failed" > _site/build-status.txt
+          echo "Check build logs for details" >> _site/build-status.txt
         fi
         
-    - name: Upload to GitHub Pages
+        # List final files
+        echo "Files prepared for deployment:"
+        ls -la _site/
+        
+    - name: Upload artifact
       uses: actions/upload-pages-artifact@v3
       with:
-        path: public
-        
+        path: _site
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    permissions:
+      pages: write
+      id-token: write
+    steps:
     - name: Deploy to GitHub Pages
       id: deployment
       uses: actions/deploy-pages@v4
