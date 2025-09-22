@@ -1,0 +1,18 @@
+# Arquivos de compilação
+*.o
+*.obj
+*.elf
+*.bin
+*.iso
+*.img
+*.log
+*.dmp
+*.map
+*.lst
+*.sym
+*.tmp
+*.bak
+kasm.o
+kc.o
+kernel
+link.ld
