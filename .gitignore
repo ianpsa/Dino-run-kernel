@@ -21,6 +21,9 @@ kc.o
 !docs/v86/**/*.bin
 !docs/v86/**/*.wasm
 
+# Permitir ISO do projeto no Pages
+!docs/asvarius.iso
+
 # GitHub Pages
 public/
 _site/
