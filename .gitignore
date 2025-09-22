@@ -14,5 +14,19 @@
 *.bak
 kasm.o
 kc.o
-kernel
-link.ld
+# kernel - removido do gitignore para permitir deploy
+# link.ld - removido do gitignore, é necessário para build
+
+# GitHub Pages
+public/
+_site/
+
+# IDEs e editores
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS específicos
+.DS_Store
+Thumbs.db

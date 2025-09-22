@@ -1,0 +1,31 @@
+name: ASVARIUS Kernel - Dino Run Game
+description: Kernel minimalista com jogo Dino Run integrado, jogável no navegador via emulador v86
+url: https://ianpsa.github.io/Dino-run-kernel
+
+# GitHub Pages configuration
+source: docs
+destination: _site
+
+# Build settings
+markdown: kramdown
+highlighter: rouge
+
+# Plugins
+plugins:
+  - jekyll-sitemap
+  - jekyll-feed
+
+# Collections
+collections:
+  pages:
+    output: true
+    permalink: /:path/
+
+# Exclude from processing
+exclude:
+  - Makefile
+  - "*.c"
+  - "*.asm"
+  - "*.o"
+  - kernel
+  - README.md

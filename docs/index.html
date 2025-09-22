@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ASVARIUS Kernel - Dino Run Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: #000;
+            color: #00ff00;
+            overflow: hidden;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        .header {
+            background: #111;
+            padding: 10px 20px;
+            border-bottom: 2px solid #00ff00;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .title {
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            background: #333;
+            color: #00ff00;
+            border: 1px solid #00ff00;
+            padding: 5px 15px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 12px;
+        }
+
+        .btn:hover {
+            background: #00ff00;
+            color: #000;
+        }
+
+        .emulator-container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #000;
+            position: relative;
+        }
+
+        #screen {
+            border: 2px solid #00ff00;
+            background: #000;
+            image-rendering: pixelated;
+            image-rendering: -moz-crisp-edges;
+            image-rendering: crisp-edges;
+        }
+
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            z-index: 10;
+        }
+
+        .loading-spinner {
+            border: 3px solid #333;
+            border-top: 3px solid #00ff00;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .info-panel {
+            background: #111;
+            border-top: 2px solid #00ff00;
+            padding: 10px 20px;
+            height: 100px;
+            overflow-y: auto;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+
+        .status {
+            color: #ffff00;
+            margin-bottom: 5px;
+        }
+
+        .error {
+            color: #ff0000;
+        }
+
+        .success {
+            color: #00ff00;
+        }
+
+        .instructions {
+            margin-top: 10px;
+            color: #888;
+        }
+
+        .ascii-art {
+            font-size: 8px;
+            line-height: 1;
+            color: #00ff00;
+            margin-bottom: 10px;
+            white-space: pre;
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .controls {
+                flex-wrap: wrap;
+            }
+            
+            #screen {
+                max-width: 100%;
+                max-height: calc(100vh - 200px);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="title">🦕 ASVARIUS Kernel Emulator - Dino Run Game</div>
+            <div class="controls">
+                <button class="btn" onclick="startEmulator()">Iniciar Kernel</button>
+                <button class="btn" onclick="resetEmulator()">Reset</button>
+                <button class="btn" onclick="downloadKernel()">Download Kernel</button>
+                <button class="btn" onclick="toggleFullscreen()">Tela Cheia</button>
+            </div>
+        </div>
+
+        <div class="emulator-container">
+            <div class="loading" id="loading">
+                <div class="loading-spinner"></div>
+                <div>Carregando emulador v86...</div>
+                <div class="ascii-art">
+        .                 .           
+     dP       Dino Run     9b        
+     dX     jogue agora!     Xb      
+    __                         __    
+  dXXXXbo.                 .odXXXXb d
+ XXXXXXXXOo.           .oOXXXXXXXXVXX
+ XX'~   ~'OOO8b   d8OOO'~   ~'XXXXXXX
+ 9XX'          '98v8P'          'XXP'
+  9X.          .db|db.          .XP
+    )b.  .dbo.dP''v''9b.odb.  .dX(
+,dXXXXXXXXXXXb     dXXXXXXXXXXXb.
+dXXXXXXXXXXXP'   .   '9XXXXXXXXXXXb
+dXXXXXXXXXXXXb   d|b   dXXXXXXXXXXXXb
+9XXb'   'XXXXXb.dX|Xb.dXXXXX'   'dXXP
+''      9XXXXXX(   )XXXXXXP      ''
+         XXXX X.'v'.X XXXX
+         XP^X''b   d''X^XX 
+         X. 9  ''   '  P )X
+         'b  '       '  d'
+          '             '
+                </div>
+                <div>Aguarde enquanto baixamos o kernel...</div>
+            </div>
+            <canvas id="screen" width="720" height="480" style="display: none;"></canvas>
+        </div>
+
+        <div class="info-panel">
+            <div class="status">Status: Inicializando emulador...</div>
+            <div id="log">
+                <div class="success">✓ Emulador v86 carregado</div>
+                <div class="status">→ Aguardando início do kernel...</div>
+                <div class="instructions">
+                    <strong>Controles:</strong><br>
+                    • ESPAÇO: Pular<br>
+                    • ESC: Sair do jogo<br>
+                    • F11: Tela cheia (recomendado)
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- v86 Emulator -->
+    <script src="https://cdn.jsdelivr.net/npm/v86@latest/build/libv86.js"></script>
+    
+    <script>
+        let emulator = null;
+        let isKernelLoaded = false;
+
+        // Configuração do emulador
+        const emulatorConfig = {
+            wasm_path: "https://cdn.jsdelivr.net/npm/v86@latest/build/v86.wasm",
+            screen_container: document.getElementById("screen"),
+            bios: {
+                url: "https://github.com/copy/v86/raw/master/bios/seabios.bin",
+            },
+            vga_bios: {
+                url: "https://github.com/copy/v86/raw/master/bios/vgabios.bin",
+            },
+            memory_size: 32 * 1024 * 1024, // 32MB
+            vga_memory_size: 2 * 1024 * 1024, // 2MB
+            boot_order: 0x132, // Boot from floppy, then CD, then hard disk
+            autostart: false,
+        };
+
+        function log(message, type = 'status') {
+            const logDiv = document.getElementById('log');
+            const div = document.createElement('div');
+            div.className = type;
+            div.innerHTML = message;
+            logDiv.appendChild(div);
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
+        async function downloadKernel() {
+            try {
+                log(' Baixando kernel do repositório...', 'status');
+                
+                // Tenta baixar o kernel compilado do GitHub
+                const response = await fetch('https://raw.githubusercontent.com/ianpsa/Dino-run-kernel/main/kernel');
+                
+                if (!response.ok) {
+                    throw new Error('Kernel não encontrado no repositório');
+                }
+                
+                const kernelData = await response.arrayBuffer();
+                log(`✓ Kernel baixado com sucesso (${kernelData.byteLength} bytes)`, 'success');
+                
+                return kernelData;
+            } catch (error) {
+                log(` Erro ao baixar kernel: ${error.message}`, 'error');
+                log(' Dica: Compile o kernel primeiro executando "make" no repositório', 'status');
+                throw error;
+            }
+        }
+
+        async function startEmulator() {
+            if (isKernelLoaded) {
+                log(' Reiniciando kernel...', 'status');
+                emulator.restart();
+                return;
+            }
+
+            try {
+                document.getElementById('loading').style.display = 'block';
+                document.getElementById('screen').style.display = 'none';
+                
+                log(' Iniciando emulador v86...', 'status');
+                
+                // Baixa o kernel
+                const kernelData = await downloadKernel();
+                
+                // Configura o kernel no emulador
+                emulatorConfig.multiboot = {
+                    buffer: kernelData,
+                };
+                
+                log(' Configurando emulador...', 'status');
+                
+                // Inicializa o emulador
+                emulator = new V86Starter(emulatorConfig);
+                
+                emulator.add_listener("emulator-ready", function() {
+                    log('✓ Emulador pronto!', 'success');
+                    log('🦕 Iniciando ASVARIUS Kernel...', 'success');
+                    document.getElementById('loading').style.display = 'none';
+                    document.getElementById('screen').style.display = 'block';
+                    isKernelLoaded = true;
+                });
+
+                emulator.add_listener("emulator-stopped", function() {
+                    log('⏹ Emulador parado', 'status');
+                });
+
+                // Auto-start após configuração
+                setTimeout(() => {
+                    if (emulator) {
+                        emulator.run();
+                        log('▶ Executando kernel...', 'status');
+                    }
+                }, 1000);
+
+            } catch (error) {
+                log(` Erro ao iniciar emulador: ${error.message}`, 'error');
+                document.getElementById('loading').style.display = 'none';
+                
+                // Fallback: mostrar instruções para executar localmente
+                log(' Para jogar localmente:', 'status');
+                log('1. Clone o repositório: git clone https://github.com/ianpsa/Dino-run-kernel.git', 'status');
+                log('2. Compile: make', 'status');
+                log('3. Execute: make run', 'status');
+            }
+        }
+
+        function resetEmulator() {
+            if (emulator) {
+                log(' Resetando emulador...', 'status');
+                emulator.restart();
+            }
+        }
+
+        function toggleFullscreen() {
+            const screen = document.getElementById('screen');
+            if (document.fullscreenElement) {
+                document.exitFullscreen();
+            } else {
+                screen.requestFullscreen().catch(err => {
+                    log(` Erro ao entrar em tela cheia: ${err.message}`, 'error');
+                });
+            }
+        }
+
+        // Inicialização automática quando a página carrega
+        window.addEventListener('load', function() {
+            log(' Página carregada', 'success');
+            log(' Clique em "Iniciar Kernel" para começar!', 'status');
+            
+            // Verifica se v86 está disponível
+            if (typeof V86Starter === 'undefined') {
+                log(' Erro: Biblioteca v86 não carregou', 'error');
+                log(' Tente recarregar a página', 'status');
+                return;
+            }
+            
+            log('✓ Emulador v86 carregado e pronto', 'success');
+        });
+
+        // Atalhos de teclado
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'F1') {
+                e.preventDefault();
+                startEmulator();
+            } else if (e.key === 'F5') {
+                e.preventDefault();
+                resetEmulator();
+            } else if (e.key === 'F11') {
+                e.preventDefault();
+                toggleFullscreen();
+            }
+        });
+
+        // Previne comportamentos padrão que podem interferir com o emulador
+        document.addEventListener('contextmenu', e => e.preventDefault());
+        document.addEventListener('selectstart', e => e.preventDefault());
+    </script>
+</body>
+</html>

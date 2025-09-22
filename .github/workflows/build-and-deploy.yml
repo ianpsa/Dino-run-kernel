@@ -1,0 +1,59 @@
+name: Build and Deploy Kernel to GitHub Pages
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Setup build environment
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential nasm qemu-system-x86
+        
+    - name: Build kernel
+      run: |
+        echo "Building ASVARIUS Kernel..."
+        make clean
+        make
+        ls -la kernel*
+        
+    - name: Prepare GitHub Pages
+      run: |
+        echo "Preparing files for GitHub Pages..."
+        mkdir -p public
+        cp docs/index.html public/
+        cp kernel public/ 2>/dev/null || echo "Warning: kernel file not found, web version will show error"
+        
+        # Create a simple landing page if kernel exists
+        if [ -f kernel ]; then
+          echo "✓ Kernel compiled successfully and ready for web emulator" > public/build-status.txt
+          echo "Size: $(stat -c%s kernel) bytes" >> public/build-status.txt
+          echo "Built: $(date)" >> public/build-status.txt
+        else
+          echo "❌ Kernel compilation failed" > public/build-status.txt
+          echo "Check build logs for details" >> public/build-status.txt
+        fi
+        
+    - name: Upload to GitHub Pages
+      uses: actions/upload-pages-artifact@v3
+      with:
+        path: public
+        
+    - name: Deploy to GitHub Pages
+      id: deployment
+      uses: actions/deploy-pages@v4
