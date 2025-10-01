@@ -341,7 +341,7 @@ void dino_game(void) {
         } else if (input == 27) {
             print_at_position(28, 10, "Saindo do jogo...", 0x0C);
             delay(1000);
-            return;
+            return;   
         }
 
         if (isJumping) {
