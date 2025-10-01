@@ -28,7 +28,6 @@ dXXXXXXXXXXXXb   d|b   dXXXXXXXXXXXXb
 - Compilador cruzado GCC para arquitetura alvo
 - Sistema de compilação Make
 - QEMU ou emulador compatível para testes
-- Cabeçalhos e bibliotecas de desenvolvimento
 
 ## Comandos de Compilação
 
