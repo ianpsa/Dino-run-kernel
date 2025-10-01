@@ -58,3 +58,10 @@ Com base no Makefile, os seguintes comandos estão disponíveis:
   * *  
 ```
 *Isso é um dinossauro, eu juro....*
+
+## Vídeo explicativo
+
+
+
+https://github.com/user-attachments/assets/9acc464c-116e-4dd8-81e1-cc2209420bfe
+
